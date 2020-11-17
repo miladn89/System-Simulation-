@@ -1,4 +1,4 @@
-# System-Simulation-
+# System-Simulation-2
 R Gibbs Sampler
 
 ```{r}
