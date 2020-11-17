@@ -102,3 +102,63 @@ plot(psi,type='p',pch='.',ylim=c(0.15,0.30))
 acf(psi)
 ```
 
+##Example 1: Issues with numerical integration. 
+$x_1, \ldots, x_{10}$'s are sampled from a Cauthy distribution. Calculate the integration below:
+\[
+m(x) = \int^{\infty}_{-\infty} \prod^{10}_{i=1} \frac{1}{\pi} \frac{1}{1+(x_i - \theta)^2} d\theta
+\]
+for $\theta=350$.
+
+```{r}
+cac = rcauchy(10) + 350
+lik = function(the){
+  u = dcauchy(cac[1] - the)
+  for (i in 2:10)
+    u = u*dcauchy(cac[i] - the)
+  return(u)}
+integrate(lik, -Inf, Inf)
+```
+Is this numerical value correct?
+
+
+
+## Example 2: Estimating the normal cdf $\Phi(x)$. 
+The columns represent different values of x for $\Phi(x)$ and the rows represent various numbers of samples used to estimate the cdf.
+```{r}
+x = rnorm(10^8)
+bound = qnorm(c(.5, .75, .8, .9, .95, .99, .999, .9999))
+res = matrix(0, ncol = 8, nrow = 7)
+for (i in 2:8)
+  for (j in 1:8)
+    res[i-1, j] = mean(x[1:10^i] < bound[j])
+matrix(as.numeric(format(res, digi=4)), ncol = 8)
+```
+
+- It requires $10^8$ samples to obtain accurate estimates. 
+- Importance Sampling can be use to reduce the coomputational costs.
+
+```{r}
+Nsim = 10^3
+y=rexp(Nsim) + 4.5
+weit = dnorm (y) / dexp(y-4.5)
+plot(cumsum(weit)/1:Nsim, type = "l")
+abline(a=pnorm(-4.5), b=0, col="red")
+```
+
+## Example 3: EM algorithm (Censored Data)
+As we discussed in class, an analytical expression can be obtained for the iterations of $\theta_{(j)}$.
+
+```{r}
+y = c(1, 1.5, 0.5, 2, 2.5, 2)
+m = length(y)
+n=10
+ybar = mean(y)
+theta = rnorm(1, mean = ybar, sd = sd(y))
+iter = 1
+a = 3
+while (iter < 50) {
+  theta = c(theta, m * ybar/n + (n-m) * (theta[iter] + dnorm(a-theta[iter])/pnorm(a-theta[iter]))/n)
+iter = iter +1
+}
+plot(theta)
+```
